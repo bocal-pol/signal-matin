@@ -14,8 +14,10 @@ via l'entrypoint du conteneur, jamais en dur ici).
 from __future__ import annotations
 
 import hmac
+import logging
 import os
 import subprocess
+import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
@@ -26,6 +28,7 @@ PDF_DIR = ROOT / "output" / "pdf"
 VALID_MODES = {"auto", "compact", "standard", "extended"}
 
 app = FastAPI(title="signal-matin-wrapper")
+logger = logging.getLogger("signal_matin.server")
 
 
 def _check_token(provided: str | None) -> None:
@@ -53,15 +56,26 @@ def generate(
         timeout=180,
     )
     if result.returncode != 0:
+        # SM-01 — ne jamais renvoyer stdout/stderr bruts au client (traces
+        # d'appel, chemins absolus, réponses d'API externes). Journalisés
+        # côté serveur sous un incident_id, seul cet identifiant est exposé.
+        incident_id = uuid.uuid4().hex
+        logger.error(
+            "signal_matin.generate.failed incident_id=%s returncode=%s stdout=%r stderr=%r",
+            incident_id,
+            result.returncode,
+            result.stdout[-4000:],
+            result.stderr[-4000:],
+        )
         raise HTTPException(
             status_code=500,
-            detail={"stdout": result.stdout[-4000:], "stderr": result.stderr[-4000:]},
+            detail={"error": "generation_failed", "incident_id": incident_id},
         )
 
     pdf_lines = [line for line in result.stdout.splitlines() if line.startswith("PDF genere:")]
     pdf_path = pdf_lines[-1].split("PDF genere:", 1)[1].strip() if pdf_lines else None
     pdf_filename = Path(pdf_path).name if pdf_path else None
-    return {"ok": True, "pdf_filename": pdf_filename, "stdout": result.stdout}
+    return {"ok": True, "pdf_filename": pdf_filename}
 
 
 @app.get("/pdf/{filename}")
