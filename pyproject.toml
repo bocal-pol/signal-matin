@@ -16,19 +16,19 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "icalendar>=6.1",
-  "playwright>=1.48",
-  "pydantic>=2.9",
-  "pypdf>=5.0",
-  "python-dotenv>=1.0",
-  "PyYAML>=6.0",
+  "icalendar>=6.1,<8",
+  "playwright>=1.48,<2",
+  "pydantic>=2.9,<3",
+  "pypdf>=5.0,<7",
+  "python-dotenv>=1.0,<2",
+  "PyYAML>=6.0,<7",
 ]
 
 [project.optional-dependencies]
 google = [
-  "google-api-python-client>=2.150",
-  "google-auth-httplib2>=0.2",
-  "google-auth-oauthlib>=1.2",
+  "google-api-python-client>=2.150,<3",
+  "google-auth-httplib2>=0.2,<1",
+  "google-auth-oauthlib>=1.2,<2",
 ]
 dev = ["pytest>=8.0"]
 
