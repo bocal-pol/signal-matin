@@ -19,3 +19,16 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: playwright install --with-deps chromium
       - run: pytest
+
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      # SM-03 — audit des dependances verrouillees (requirements.lock.txt),
+      # pas des contraintes ouvertes de pyproject.toml.
+      - run: pip install pip-audit
+      - run: pip-audit -r requirements.lock.txt
