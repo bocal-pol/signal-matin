@@ -1,10 +1,15 @@
 # Backlog — Signal_Matin
 
-## Sécurité — findings non corrigés (audit OWASP 2026-10-28, session P2/P3)
+## Sécurité — findings (audit OWASP 2026-10-28)
 
-| ID | Priorité | Sujet | Raison du report |
-| --- | --- | --- | --- |
-| SM-04 | P3 (A10) | `urlopen` sans contrainte de schéma sur les sources configurées (`connectors/rss.py`, `calendar_ics.py`, `weather.py`) | Hors périmètre explicitement demandé pour cette session (seuls SM-01, SM-02, SM-03 étaient visés). Non atteignable à distance (nécessite déjà un accès en écriture à `config.yaml`, monté en lecture seule dans le conteneur) — impact faible mais correction simple (`urlparse(url).scheme in {"http", "https"}`) à faire dans une session dédiée A10. |
+Les 4 findings du rapport (SM-01 à SM-04, 2 P2 + 2 P3) sont corrigés.
+Voir `security/owasp-2026-10-28/corrections/Signal_Matin.md` pour le
+détail complet de cette reprise de session, et
+`security/owasp-2026-10-28/corrections/Signal_Matin-p2-2026-10-28.md`
+pour SM-01 à SM-03 (session précédente).
 
-Voir `security/owasp-2026-10-28/corrections/Signal_Matin-p2-2026-10-28.md` pour le détail
-des 3 findings traités dans cette session (SM-01 à SM-03).
+## Durcissement non traité (hors périmètre, pas un finding)
+
+| ID | Sujet | Raison du report |
+| --- | --- | --- |
+| SM-ADV-01 | `xml.etree` sur flux RSS — entités internes récursives étendues (billion laughs) | Classé **conforme** par l'audit avancé, pas un finding exploitable (entités externes déjà bloquées, source = `config.yaml` géré par l'exploitant). Suggestion de durcissement à coût nul (`defusedxml.ElementTree`, API identique) non appliquée : ajouter une dépendance sans nécessité confirmée va à l'encontre de la discipline de code minimal du projet. À reconsidérer si le projet accepte un jour des flux RSS non maîtrisés par l'exploitant. |
