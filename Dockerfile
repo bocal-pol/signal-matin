@@ -26,13 +26,18 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 
 WORKDIR /app
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md requirements.lock.txt ./
 COPY src ./src
 COPY main.py ./
 COPY server.py ./
 COPY config.example.yaml ./
 
-RUN pip install --no-cache-dir -e . "fastapi>=0.115" "uvicorn[standard]>=0.32" \
+# SM-03 — installation depuis le lockfile (versions épinglées, régénéré via
+# `pip-compile pyproject.toml requirements.server.in -o requirements.lock.txt`)
+# au lieu de contraintes `>=` ouvertes : reproductible d'un build à l'autre.
+# `--no-deps` sur le package lui-même : ses dépendances viennent du lock.
+RUN pip install --no-cache-dir -r requirements.lock.txt \
+    && pip install --no-cache-dir --no-deps -e . \
     && python -m playwright install chromium \
     && python -m playwright install-deps chromium \
     && chmod -R a+rX /opt/playwright-browsers

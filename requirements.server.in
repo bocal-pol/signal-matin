@@ -1,0 +1,9 @@
+# Dépendances du wrapper HTTP (server.py), non déclarées dans pyproject.toml
+# car signal-matin est un package CLI — le serveur FastAPI est un point
+# d'entrée Docker-only (cf. Dockerfile).
+#
+# Régénérer requirements.lock.txt après modification :
+#   pip install pip-tools
+#   pip-compile pyproject.toml requirements.server.in -o requirements.lock.txt --no-strip-extras
+fastapi>=0.115,<1
+uvicorn[standard]>=0.32,<1

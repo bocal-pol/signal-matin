@@ -8,6 +8,7 @@ import re
 import urllib.request
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
+from urllib.parse import urlparse
 
 from ..models import DataSourceStatus, DataState, NewsItem, SourceRef
 
@@ -51,6 +52,13 @@ def _date(element: ET.Element) -> dt.datetime | None:
 
 
 def _payload(url: str) -> bytes:
+    # SM-04 — urlopen accepte file:// et ftp:// : un flux configure avec un
+    # schema non http(s) lirait un fichier local ou un service non prevu.
+    # Les URLs viennent de config.yaml (liste d'abonnements de l'exploitant),
+    # pas d'une entree utilisateur distante, mais le controle reste une
+    # defense en profondeur a cout nul.
+    if urlparse(url).scheme not in {"http", "https"}:
+        raise ValueError(f"schema non autorise pour un flux RSS : {url!r}")
     request = urllib.request.Request(url, headers={"User-Agent": "Signal-Matin/1.0"})
     with urllib.request.urlopen(request, timeout=12) as response:
         return response.read(2_000_000)
